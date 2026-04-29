@@ -1,0 +1,15 @@
+{
+  "combined_raw_text": "\n--- DOCUMENT: ex1.jpeg ---\n[OCR ERROR: tesseract is not installed or it's not in your PATH. See README file for more information.]\n",
+  "aggregated_extracted": {
+    "name": "OCR ERROR"
+  },
+  "documents": [
+    {
+      "filename": "23FA1DFC_ex1.jpeg",
+      "original_name": "ex1.jpeg",
+      "fields_found": [
+        "name"
+      ]
+    }
+  ]
+}

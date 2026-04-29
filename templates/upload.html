@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Submit Application - e-Sevai</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <header>
+        <h1>e-Sevai <span style="font-weight: normal; font-size: 1rem; opacity: 0.8;">| Citizen Services Portal</span></h1>
+        <nav>
+            <a href="/">New Application</a>
+            <a href="/application_check">My Applications</a>
+            <a href="/login" class="badge-info" style="padding: 4px 8px; border-radius: 4px; text-decoration: none;">Official Login</a>
+        </nav>
+    </header>
+
+    <main>
+        <div style="max-width: 600px; margin: 0 auto;">
+            <div class="card">
+                <h2 style="margin-bottom: 1.5rem; text-align: center;">New Service Application</h2>
+
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                  {% if messages %}
+                    {% for category, message in messages %}
+                      <div class="alert alert-{{ category }}">{{ message }}</div>
+                    {% endfor %}
+                  {% endif %}
+                {% endwith %}
+
+                <form action="/apply" method="POST" enctype="multipart/form-data">
+
+                    <div class="form-group">
+                        <label for="service">Target Service</label>
+                        <select id="service" name="service" required>
+                            <option value="">Choose a service...</option>
+                            {% for s in services %}
+                                <option value="{{ s }}">{{ s }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="name">Full Name (as per Identity Proof)</label>
+                        <input type="text" id="name" name="name"
+                               placeholder="e.g. Ramesh Kumar" required/>
+                    </div>
+
+                    <div class="val-grid" style="margin-top: 0;">
+                        <div class="form-group">
+                            <label for="dob">Date of Birth</label>
+                            <input type="text" id="dob" name="dob"
+                                   placeholder="DD/MM/YYYY" required/>
+                        </div>
+                        <div class="form-group">
+                            <label for="aadhaar">Aadhaar (12-digit)</label>
+                            <input type="text" id="aadhaar" name="aadhaar"
+                                   placeholder="1234 5678 9012" required/>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="address">Residential Address</label>
+                        <textarea id="address" name="address" rows="3"
+                                  placeholder="Enter full address..."></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="data">Additional Application Details</label>
+                        <textarea id="data" name="data" rows="4"
+                                  placeholder="Describe your request or provide any extra information relevant to this application..."></textarea>
+                    </div>
+
+                    <div class="form-group" style="background: var(--bg); padding: 1rem; border: 2px dashed var(--border); border-radius: var(--radius); text-align: center;">
+                        <label for="document" style="display: block; cursor: pointer;">
+                            <span style="font-size: 1.5rem; display: block; margin-bottom: 0.5rem;">📄</span>
+                            <strong>Upload Supporting Documents</strong>
+                            <span style="display: block; font-size: 0.75rem; color: var(--text-muted); font-weight: normal;">
+                                Accepted formats: PDF, PNG, JPG &nbsp;·&nbsp; Select one or more files
+                            </span>
+                        </label>
+                        <input type="file" id="document" name="document"
+                               accept=".pdf,.png,.jpg,.jpeg" required multiple
+                               style="margin: 1rem auto;"/>
+                    </div>
+
+                    <button type="submit" style="width: 100%; font-size: 1.1rem; padding: 1rem;">
+                        Process with Intelligent Verification
+                    </button>
+
+                    <p style="text-align: center; color: var(--text-muted); font-size: 0.8rem; margin-top: 1rem;">
+                        AI OCR will automatically scan your documents to verify the details provided.
+                    </p>
+
+                </form>
+            </div>
+
+            <!-- Quick link for returning citizens -->
+            <div style="text-align: center; margin-top: 1rem; padding-bottom: 2rem;">
+                <p style="color: var(--text-muted); font-size: 0.875rem;">
+                    Already submitted?
+                    <a href="/application_check" style="color: var(--primary);">Check your application status →</a>
+                </p>
+            </div>
+        </div>
+    </main>
+</body>
+</html>

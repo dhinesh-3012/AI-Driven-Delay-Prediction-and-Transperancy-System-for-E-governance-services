@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Official Dashboard - e-Sevai</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <header>
+        <h1>e-Sevai Intelligent Governance
+            <span style="font-size: 0.8rem; background: var(--warning); color: #000;
+                         padding: 2px 8px; border-radius: 4px;
+                         vertical-align: middle; margin-left: 10px;">
+                Official Portal
+            </span>
+        </h1>
+        <nav>
+            <a href="/official/dashboard">Dashboard</a>
+            <a href="/logout" style="color: var(--danger);">Logout</a>
+        </nav>
+    </header>
+
+    <main>
+
+        <!-- ── Flash messages ───────────────────────────────────────────── -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            {% for category, message in messages %}
+              <div class="alert alert-{{ category }}" style="margin-bottom: 1rem;">
+                {{ message }}
+              </div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+
+        <!-- ── Stats row ─────────────────────────────────────────────────── -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+                    gap: 1rem; margin-bottom: 2rem;">
+
+            <div class="card" style="text-align: center; padding: 1.25rem;">
+                <div style="font-size: 2rem; font-weight: 700; color: var(--primary);">
+                    {{ stats.total }}
+                </div>
+                <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.25rem;">
+                    Total Applications
+                </div>
+            </div>
+
+            <div class="card" style="text-align: center; padding: 1.25rem;">
+                <div style="font-size: 2rem; font-weight: 700; color: #f59e0b;">
+                    {{ stats.pending }}
+                </div>
+                <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.25rem;">
+                    Pending Review
+                </div>
+            </div>
+
+            <div class="card" style="text-align: center; padding: 1.25rem;">
+                <div style="font-size: 2rem; font-weight: 700; color: var(--success);">
+                    {{ stats.approved }}
+                </div>
+                <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.25rem;">
+                    Approved
+                </div>
+            </div>
+
+            <div class="card" style="text-align: center; padding: 1.25rem;">
+                <div style="font-size: 2rem; font-weight: 700; color: var(--danger);">
+                    {{ stats.rejected }}
+                </div>
+                <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.25rem;">
+                    Rejected
+                </div>
+            </div>
+
+            <div class="card" style="text-align: center; padding: 1.25rem;">
+                <div style="font-size: 2rem; font-weight: 700; color: var(--danger);">
+                    {{ stats.flagged }}
+                </div>
+                <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.25rem;">
+                    Flagged (Risk)
+                </div>
+            </div>
+
+        </div>
+
+        <!-- ── Applications table ─────────────────────────────────────────── -->
+        <div class="card">
+            <h2 style="margin-bottom: 1.5rem;">All Applications</h2>
+
+            {% if applications %}
+            <div style="overflow-x: auto;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>App ID</th>
+                            <th>Service</th>
+                            <th>Applicant</th>
+                            <th>Submitted</th>
+                            <th>Risk</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for app in applications %}
+                        <tr>
+                            <!-- App ID + detail link -->
+                            <td>
+                                <a href="/official/review/{{ app.id }}"
+                                   style="font-family: monospace; font-size: 0.85rem;
+                                          color: var(--primary); text-decoration: none;">
+                                    {{ app.id[:12] }}…
+                                </a>
+                            </td>
+
+                            <!-- Service -->
+                            <td style="font-size: 0.9rem;">{{ app.service }}</td>
+
+                            <!-- Applicant name -->
+                            <td style="font-size: 0.9rem;">{{ app.form_data.name }}</td>
+
+                            <!-- Date submitted -->
+                            <td style="font-size: 0.85rem; color: var(--text-muted);">
+                                {{ app.submitted_at[:10] }}
+                            </td>
+
+                            <!-- Risk badge -->
+                            <td>
+                                <span class="badge
+                                    {% if app.risk == 'low' %}badge-success
+                                    {% elif app.risk == 'medium' %}badge-warning
+                                    {% else %}badge-danger{% endif %}"
+                                      style="font-size: 0.75rem; padding: 2px 8px;">
+                                    {{ app.risk | upper }}
+                                </span>
+                            </td>
+
+                            <!-- Status badge -->
+                            <td>
+                                {% set s = app.status %}
+                                {% if "Approved" in s %}
+                                    <span class="badge badge-success"
+                                          style="font-size: 0.75rem; padding: 2px 8px;">
+                                        ✔ Approved
+                                    </span>
+                                {% elif "Rejected" in s %}
+                                    <span class="badge badge-danger"
+                                          style="font-size: 0.75rem; padding: 2px 8px;">
+                                        ✖ Rejected
+                                    </span>
+                                {% elif "Escalated" in s %}
+                                    <span class="badge badge-warning"
+                                          style="font-size: 0.75rem; padding: 2px 8px;">
+                                        ⚠ Escalated
+                                    </span>
+                                {% else %}
+                                    <span class="badge badge-info"
+                                          style="font-size: 0.75rem; padding: 2px 8px;">
+                                        🟡 Pending
+                                    </span>
+                                {% endif %}
+                            </td>
+
+                            <!-- ── Action buttons ── -->
+                            <td>
+                                <div style="display: flex; gap: 0.4rem; flex-wrap: wrap; align-items: center;">
+
+                                    <!-- View full detail -->
+                                    <a href="/official/review/{{ app.id }}"
+                                       style="padding: 0.3rem 0.7rem;
+                                              background: var(--primary);
+                                              color: #fff;
+                                              border-radius: 5px;
+                                              font-size: 0.78rem;
+                                              text-decoration: none;
+                                              white-space: nowrap;">
+                                        🔍 View
+                                    </a>
+
+                                    {% if "Approved" not in app.status and "Rejected" not in app.status %}
+
+                                        <!-- Quick Approve -->
+                                        <a href="/update_status/{{ app.id }}/Approved"
+                                           onclick="return confirm('Approve application {{ app.id[:8] }}?')"
+                                           style="padding: 0.3rem 0.7rem;
+                                                  background: #16a34a;
+                                                  color: #fff;
+                                                  border-radius: 5px;
+                                                  font-size: 0.78rem;
+                                                  text-decoration: none;
+                                                  white-space: nowrap;">
+                                            ✔ Approve
+                                        </a>
+
+                                        <!-- Quick Reject -->
+                                        <a href="/update_status/{{ app.id }}/Rejected"
+                                           onclick="return confirm('Reject application {{ app.id[:8] }}?')"
+                                           style="padding: 0.3rem 0.7rem;
+                                                  background: #dc2626;
+                                                  color: #fff;
+                                                  border-radius: 5px;
+                                                  font-size: 0.78rem;
+                                                  text-decoration: none;
+                                                  white-space: nowrap;">
+                                            ✖ Reject
+                                        </a>
+
+                                    {% else %}
+                                        <span style="font-size: 0.75rem; color: var(--text-muted);">
+                                            No actions
+                                        </span>
+                                    {% endif %}
+
+                                </div>
+                            </td>
+
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            {% else %}
+            <div class="alert alert-info" style="text-align: center; padding: 2rem;">
+                No applications have been submitted yet.
+            </div>
+            {% endif %}
+
+        </div>
+    </main>
+</body>
+</html>

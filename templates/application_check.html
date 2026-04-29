@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Applications - e-Sevai</title>
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f0f4f8;
+            color: #2d3748;
+            min-height: 100vh;
+        }
+
+        /* ── Header ── */
+        header {
+            background: #1a3a5c;
+            color: #fff;
+            padding: 0.9rem 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+        header h1 { font-size: 1.05rem; font-weight: 600; }
+        header .nav-links { display: flex; gap: 1.25rem; align-items: center; }
+        header a { color: #a0c4e8; font-size: 0.875rem; text-decoration: none; transition: color 0.15s; }
+        header a:hover { color: #fff; }
+        header .btn-new-app {
+            background: #2563eb; color: #fff;
+            padding: 0.4rem 1rem; border-radius: 6px;
+            font-size: 0.825rem; font-weight: 500;
+        }
+        header .btn-new-app:hover { background: #1d4ed8; color: #fff; }
+
+        /* ── Page wrapper ── */
+        .page-wrap { max-width: 820px; margin: 2.5rem auto; padding: 0 1rem 4rem; }
+
+        /* ── Page heading ── */
+        .page-heading {
+            display: flex; align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1.75rem; flex-wrap: wrap; gap: 0.75rem;
+        }
+        .page-heading-left { display: flex; align-items: baseline; gap: 0.75rem; }
+        .page-heading h2 { font-size: 1.35rem; font-weight: 700; color: #1a3a5c; }
+        .count-pill {
+            background: #dbeafe; color: #1e40af;
+            font-size: 0.75rem; font-weight: 600;
+            padding: 0.2rem 0.65rem; border-radius: 12px;
+        }
+
+        /* ── Live indicator ── */
+        .live-indicator {
+            display: flex; align-items: center; gap: 0.5rem;
+            font-size: 0.78rem; color: #64748b;
+        }
+        .live-dot {
+            width: 8px; height: 8px; border-radius: 50%;
+            background: #10b981;
+            animation: pulse 2s infinite;
+        }
+        .live-dot.paused { background: #94a3b8; animation: none; }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50%       { opacity: 0.4; transform: scale(0.85); }
+        }
+        #last-checked { font-size: 0.72rem; color: #94a3b8; }
+
+        /* ── Flash messages ── */
+        .alert {
+            padding: 0.75rem 1rem; border-radius: 8px;
+            font-size: 0.875rem; margin-bottom: 1.25rem;
+        }
+        .alert-success { background: #d1fae5; color: #065f46; border: 1px solid #6ee7b7; }
+        .alert-error   { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
+        .alert-warning { background: #fef9c3; color: #854d0e; border: 1px solid #fde047; }
+        .alert-info    { background: #dbeafe; color: #1e40af; border: 1px solid #93c5fd; }
+
+        /* ── Toast notification ── */
+        #toast {
+            position: fixed; bottom: 1.5rem; right: 1.5rem;
+            background: #1e293b; color: #fff;
+            padding: 0.85rem 1.25rem; border-radius: 10px;
+            font-size: 0.875rem; font-weight: 500;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.25);
+            display: none; z-index: 9999;
+            max-width: 320px; line-height: 1.5;
+            border-left: 4px solid #10b981;
+        }
+        #toast.show    { display: block; animation: slideIn 0.3s ease; }
+        #toast.toast-rejected { border-left-color: #ef4444; }
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(16px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ── Info strip ── */
+        .info-strip {
+            background: #eff6ff; border: 1px solid #bfdbfe;
+            border-radius: 8px; padding: 0.75rem 1rem;
+            font-size: 0.8rem; color: #1e40af;
+            margin-bottom: 1.5rem;
+            display: flex; align-items: flex-start; gap: 0.5rem;
+        }
+
+        /* ── Application card ── */
+        .app-card {
+            background: #fff;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 1.25rem 1.5rem;
+            margin-bottom: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 1rem;
+            transition: box-shadow 0.15s;
+        }
+        .app-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.07); }
+
+        /* left accent border per status */
+        .app-card.status-pending  { border-left: 4px solid #f59e0b; }
+        .app-card.status-approved { border-left: 4px solid #10b981; }
+        .app-card.status-rejected { border-left: 4px solid #ef4444; }
+
+        /* flash highlight when status changes live */
+        @keyframes highlightCard {
+            0%   { background: #fefce8; }
+            100% { background: #fff; }
+        }
+        .app-card.status-changed { animation: highlightCard 2s ease forwards; }
+
+        .app-info { flex: 1; min-width: 0; }
+
+        .app-id {
+            font-family: 'Courier New', monospace;
+            font-size: 0.7rem; color: #94a3b8;
+            margin-bottom: 0.3rem; letter-spacing: 0.03em;
+        }
+        .app-service {
+            font-size: 1rem; font-weight: 700;
+            color: #1a3a5c; margin-bottom: 0.5rem;
+        }
+        .app-meta {
+            display: flex; flex-wrap: wrap;
+            gap: 0.4rem 1.25rem;
+            font-size: 0.82rem; color: #64748b; margin-bottom: 0.5rem;
+        }
+        .app-meta span { display: flex; align-items: center; gap: 0.3rem; }
+        .app-details {
+            font-size: 0.82rem; color: #475569;
+            background: #f8fafc; border: 1px solid #e2e8f0;
+            border-radius: 6px; padding: 0.5rem 0.75rem;
+            margin-top: 0.5rem; line-height: 1.6;
+        }
+        .app-details strong { color: #334155; }
+        .app-date { font-size: 0.72rem; color: #94a3b8; margin-top: 0.6rem; }
+
+        /* ── Status badge ── */
+        .status-badge {
+            display: inline-flex; align-items: center; gap: 0.35rem;
+            padding: 0.4rem 0.9rem; border-radius: 20px;
+            font-size: 0.8rem; font-weight: 600;
+            white-space: nowrap; min-width: 105px;
+            justify-content: center; flex-shrink: 0;
+        }
+        .badge-pending  { background: #fef3c7; color: #92400e; border: 1px solid #fbbf24; }
+        .badge-approved { background: #d1fae5; color: #065f46; border: 1px solid #34d399; }
+        .badge-rejected { background: #fee2e2; color: #991b1b; border: 1px solid #f87171; }
+
+        /* ── Empty state ── */
+        .empty-state {
+            text-align: center; padding: 5rem 2rem;
+            background: #fff; border: 1px solid #e2e8f0; border-radius: 12px;
+        }
+        .empty-icon { font-size: 3.5rem; margin-bottom: 1rem; }
+        .empty-state h3 { font-size: 1.1rem; color: #334155; margin-bottom: 0.5rem; }
+        .empty-state p  { font-size: 0.875rem; color: #94a3b8; margin-bottom: 1.75rem; }
+
+        /* ── Buttons ── */
+        .btn {
+            display: inline-flex; align-items: center; gap: 0.4rem;
+            padding: 0.6rem 1.4rem; border-radius: 8px;
+            font-size: 0.875rem; font-weight: 500;
+            text-decoration: none; transition: opacity 0.15s;
+        }
+        .btn:hover { opacity: 0.88; }
+        .btn-primary { background: #1a3a5c; color: #fff; }
+        .btn-blue    { background: #2563eb; color: #fff; }
+        .btn-outline {
+            background: transparent; color: #1a3a5c;
+            border: 1px solid #cbd5e1;
+        }
+        .btn-outline:hover { background: #f1f5f9; }
+        .action-bar { display: flex; gap: 0.75rem; flex-wrap: wrap; margin-top: 1.75rem; }
+
+        @media (max-width: 560px) {
+            .app-card { flex-direction: column; }
+            .status-badge { align-self: flex-start; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- ── Header ─────────────────────────────────────────────────────────────── -->
+<header>
+    <h1>e-Sevai &nbsp;|&nbsp; Application Status Tracker</h1>
+    <div class="nav-links">
+        <a href="/">Home</a>
+        <a href="/application_check">My Applications</a>
+        <a href="/" class="btn-new-app">+ New Application</a>
+    </div>
+</header>
+
+<!-- ── Main ───────────────────────────────────────────────────────────────── -->
+<div class="page-wrap">
+
+    <!-- Flash messages (server-side) -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="alert alert-{{ category }}">{{ message }}</div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    <!-- Page heading -->
+    <div class="page-heading">
+        <div class="page-heading-left">
+            <h2>My Applications</h2>
+            {% if apps %}
+              <span class="count-pill">{{ apps|length }} found</span>
+            {% endif %}
+        </div>
+
+        {% if apps %}
+        <div class="live-indicator">
+            <div class="live-dot" id="live-dot"></div>
+            <span>Live updates on</span>
+            <span id="last-checked">checking...</span>
+        </div>
+        {% endif %}
+    </div>
+
+    {% if apps %}
+
+      <div class="info-strip">
+        ℹ️&nbsp; This page automatically checks for status changes every 10 seconds.
+        You will be notified instantly when an officer approves or rejects your application.
+      </div>
+
+      <!-- Cards — rendered server-side, updated live by JS -->
+      <div id="cards-container">
+        {% for application in apps %}
+
+          {% set s = application.status %}
+          {% if "Approved" in s %}
+            {% set card_cls  = "status-approved" %}
+            {% set badge_cls = "badge-approved"  %}
+            {% set b_icon    = "🟢"              %}
+            {% set b_label   = "Approved"        %}
+          {% elif "Rejected" in s %}
+            {% set card_cls  = "status-rejected" %}
+            {% set badge_cls = "badge-rejected"  %}
+            {% set b_icon    = "🔴"              %}
+            {% set b_label   = "Rejected"        %}
+          {% else %}
+            {% set card_cls  = "status-pending"  %}
+            {% set badge_cls = "badge-pending"   %}
+            {% set b_icon    = "🟡"              %}
+            {% set b_label   = "Pending"         %}
+          {% endif %}
+
+          <div class="app-card {{ card_cls }}"
+               id="card-{{ application.id }}"
+               data-app-id="{{ application.id }}"
+               data-status="{{ b_label }}">
+
+            <div class="app-info">
+              <div class="app-id">ID: {{ application.id }}</div>
+              <div class="app-service">{{ application.service }}</div>
+
+              <div class="app-meta">
+                <span>👤 {{ application.form_data.name }}</span>
+                <span>🪪 {{ application.form_data.aadhaar }}</span>
+                {% if application.form_data.dob %}
+                  <span>🎂 {{ application.form_data.dob }}</span>
+                {% endif %}
+                <span>📎 {{ application.documents | length }} document(s)</span>
+              </div>
+
+              {% if application.form_data.address %}
+              <div class="app-meta">
+                <span>📍 {{ application.form_data.address }}</span>
+              </div>
+              {% endif %}
+
+              {% if application.form_data.get("data") %}
+              <div class="app-details">
+                <strong>Additional Details:</strong><br>
+                {{ application.form_data.data }}
+              </div>
+              {% endif %}
+
+              <div class="app-date">
+                Submitted on {{ application.submitted_at[:10] }}
+                at {{ application.submitted_at[11:19] }}
+              </div>
+            </div>
+
+            <!-- Status badge — updated in-place by JS when status changes -->
+            <div>
+              <span class="status-badge {{ badge_cls }}"
+                    id="badge-{{ application.id }}">
+                {{ b_icon }}&nbsp; {{ b_label }}
+              </span>
+            </div>
+
+          </div>
+
+        {% endfor %}
+      </div><!-- /cards-container -->
+
+      <div class="action-bar">
+        <a href="/" class="btn btn-blue">+ Submit New Application</a>
+        <a href="/" class="btn btn-outline">← Back to Portal</a>
+      </div>
+
+    {% else %}
+
+      <div class="empty-state">
+        <div class="empty-icon">📭</div>
+        <h3>No applications found</h3>
+        <p>
+          We couldn't find any applications linked to your current session.<br>
+          Submit a new application and it will appear here.
+        </p>
+        <a href="/" class="btn btn-primary">Submit an Application</a>
+      </div>
+
+    {% endif %}
+
+</div><!-- /page-wrap -->
+
+<!-- ── Toast ──────────────────────────────────────────────────────────────── -->
+<div id="toast"></div>
+
+<!-- ── Live-polling script ────────────────────────────────────────────────── -->
+<script>
+(function () {
+  "use strict";
+
+  /* Only run if there are application cards on the page */
+  var cards = document.querySelectorAll(".app-card[data-app-id]");
+  if (!cards.length) return;
+
+  /* ── Helpers ── */
+
+  /* Convert any raw status string to a short canonical label */
+  function toLabel(raw) {
+    if (!raw) return "Pending";
+    if (raw.indexOf("Approved") !== -1) return "Approved";
+    if (raw.indexOf("Rejected") !== -1) return "Rejected";
+    return "Pending";
+  }
+
+  function cardClass(label) {
+    if (label === "Approved") return "status-approved";
+    if (label === "Rejected") return "status-rejected";
+    return "status-pending";
+  }
+
+  function badgeClass(label) {
+    if (label === "Approved") return "badge-approved";
+    if (label === "Rejected") return "badge-rejected";
+    return "badge-pending";
+  }
+
+  function badgeIcon(label) {
+    if (label === "Approved") return "🟢";
+    if (label === "Rejected") return "🔴";
+    return "🟡";
+  }
+
+  /* Show a bottom-right toast for N milliseconds */
+  function showToast(msg, type) {
+    var t = document.getElementById("toast");
+    if (!t) return;
+    t.textContent = msg;
+    t.className = "show" + (type === "rejected" ? " toast-rejected" : "");
+    clearTimeout(t._timer);
+    t._timer = setTimeout(function () { t.className = ""; }, 6000);
+  }
+
+  /* Format a Date as HH:MM:SS */
+  function timeStr(d) {
+    return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+  }
+
+  /* ── State: map of appId → current label ── */
+  var statusMap = {};
+  cards.forEach(function (card) {
+    statusMap[card.dataset.appId] = card.dataset.status;
+  });
+
+  var dotEl  = document.getElementById("live-dot");
+  var lastEl = document.getElementById("last-checked");
+
+  /* ── DOM updater ── */
+  function applyUpdate(appId, newLabel, serviceName) {
+    var card  = document.getElementById("card-"  + appId);
+    var badge = document.getElementById("badge-" + appId);
+
+    if (card) {
+      /* Remove old status class, add new one + highlight */
+      card.classList.remove("status-pending", "status-approved",
+                             "status-rejected", "status-changed");
+      card.classList.add(cardClass(newLabel));
+      /* Force reflow so the animation restarts */
+      void card.offsetWidth;
+      card.classList.add("status-changed");
+      card.dataset.status = newLabel;
+    }
+
+    if (badge) {
+      badge.className = "status-badge " + badgeClass(newLabel);
+      badge.innerHTML = badgeIcon(newLabel) + "&nbsp; " + newLabel;
+    }
+
+    /* Toast */
+    if (newLabel === "Approved") {
+      showToast("✅ \"" + serviceName + "\" has been Approved!", "approved");
+    } else if (newLabel === "Rejected") {
+      showToast("❌ \"" + serviceName + "\" has been Rejected.", "rejected");
+    } else {
+      showToast("🔄 \"" + serviceName + "\" status changed to " + newLabel + ".", "");
+    }
+  }
+
+  /* ── Poll /api/applications ── */
+  var POLL_INTERVAL = 10000;   /* 10 seconds */
+
+  function poll() {
+    fetch("/api/applications")
+      .then(function (res) {
+        if (!res.ok) throw new Error("HTTP " + res.status);
+        return res.json();
+      })
+      .then(function (allApps) {
+
+        /* Update last-checked timestamp */
+        if (lastEl) lastEl.textContent = "last checked " + timeStr(new Date());
+        if (dotEl)  dotEl.classList.remove("paused");
+
+        allApps.forEach(function (app) {
+          /* Only care about apps shown on this page */
+          if (!(app.id in statusMap)) return;
+
+          var newLabel = toLabel(app.status);
+          var oldLabel = statusMap[app.id];
+
+          if (newLabel === oldLabel) return;   /* no change */
+
+          /* Update internal state first */
+          statusMap[app.id] = newLabel;
+
+          /* Then update the DOM */
+          applyUpdate(app.id, newLabel, app.service || "Application");
+        });
+      })
+      .catch(function () {
+        /* Network / server error — show paused indicator */
+        if (dotEl)  dotEl.classList.add("paused");
+        if (lastEl) lastEl.textContent = "connection lost – retrying...";
+      });
+  }
+
+  /* Kick off immediately, then repeat */
+  poll();
+  setInterval(poll, POLL_INTERVAL);
+
+})();
+</script>
+
+</body>
+</html>

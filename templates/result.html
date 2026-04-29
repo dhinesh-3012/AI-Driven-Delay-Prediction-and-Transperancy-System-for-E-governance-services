@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Process Application #{{ app.id[:8] }} - e-Sevai</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <header>
+        <h1>e-Sevai Intelligent Governance <span style="font-size: 0.8rem; background: var(--warning); color: #000; padding: 2px 8px; border-radius: 4px; vertical-align: middle; margin-left: 10px;">Official Portal</span></h1>
+        <nav>
+            <a href="/official/dashboard">Dashboard</a>
+            <a href="/logout" style="color: var(--danger);">Logout</a>
+        </nav>
+    </header>
+
+    <main>
+        <div class="card" style="border-left: 5px solid var(--primary);">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <h2 style="margin-bottom: 0.25rem;">Application #{{ app.id[:12] }}</h2>
+                    <p style="color: var(--text-muted);">Service: <strong>{{ app.service }}</strong> | Submitted on {{ app.submitted_at[:10] }}</p>
+                </div>
+                <span class="badge {% if 'Approved' in app.status %}badge-success{% elif 'Delayed' in app.status %}badge-danger{% else %}badge-info{% endif %}" style="padding: 0.5rem 1rem; font-size: 0.9rem;">
+                    {{ app.status }}
+                </span>
+            </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 2rem;">
+            <!-- Left Column: Details & Validation -->
+            <div>
+                <div class="card">
+                    <h3>Data Integrity Comparison</h3>
+                    <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem;">
+                        Verify extracted AI data against the citizen's original application inputs.
+                    </p>
+                    <table style="font-size: 0.9rem;">
+                        <thead>
+                            <tr>
+                                <th>Field</th>
+                                <th>Citizen Input</th>
+                                <th>AI / OCR Extracted</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>Name</strong></td>
+                                <td>{{ app.form_data.name }}</td>
+                                <td>{{ app.extracted.name or '<span style="color:var(--danger)">Not Found</span>'|safe }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>DOB</strong></td>
+                                <td>{{ app.form_data.dob }}</td>
+                                <td>{{ app.extracted.dob or '<span style="color:var(--danger)">Not Found</span>'|safe }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Aadhaar</strong></td>
+                                <td>{{ app.form_data.aadhaar }}</td>
+                                <td>{{ app.extracted.aadhaar or '<span style="color:var(--danger)">Not Found</span>'|safe }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Income</strong></td>
+                                <td>--</td>
+                                <td>{{ app.extracted.income or 'N/A' }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="card">
+                    <h3>Intelligent Validation Analysis</h3>
+                    <div style="margin: 1rem 0;">
+                        <span class="badge {% if app.risk == 'low' %}badge-success{% elif app.risk == 'medium' %}badge-warning{% else %}badge-danger{% endif %}" style="padding: 0.5rem; width: 100%; justify-content: center; font-size: 1rem;">
+                            Risk Profile: {{ app.risk|upper }}
+                        </span>
+                    </div>
+                    <p class="alert alert-info" style="font-size: 0.9rem;">
+                        <strong>AI Summary:</strong> {{ app.validation.summary }}
+                    </p>
+
+                    <div style="margin-top: 1.5rem;">
+                        <h4 style="font-size: 0.9rem; color: var(--text-muted); text-transform: uppercase;">Detection Log</h4>
+                        <ul style="list-style: none; margin-top: 0.5rem;">
+                            {% for flag in app.validation.flags %}
+                            <li style="padding: 0.75rem; background: #fff5f5; border-left: 3px solid var(--danger); margin-bottom: 0.5rem; border-radius: 4px; font-size: 0.9rem;">
+                                <strong>[{{ flag.severity|upper }}]</strong> {{ flag.field }}: {{ flag.note }}
+                            </li>
+                            {% endfor %}
+                            {% for p in app.validation.passed %}
+                            <li style="padding: 0.75rem; background: #f0fff4; border-left: 3px solid var(--success); margin-bottom: 0.5rem; border-radius: 4px; font-size: 0.9rem;">
+                                <strong>[VERIFIED]</strong> {{ p.field }}: {{ p.note }}
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+
+                {% if 'Approved' not in app.status and 'Rejected' not in app.status %}
+                <div class="card">
+                    <h3>Officer Determination</h3>
+                    <form method="POST" action="/official/action/{{ app.id }}" style="margin-top: 1rem;">
+                        <div class="form-group">
+                            <label for="officer">Reviewing Officer Name</label>
+                            <input type="text" id="officer" name="officer" required placeholder="Full Name"/>
+                        </div>
+                        <div class="form-group">
+                            <label for="reason">Review Notes / Remarks</label>
+                            <textarea id="reason" name="reason" placeholder="Explain your decision..."></textarea>
+                        </div>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; margin-top: 1rem;">
+                            <button type="submit" name="action" value="approve" style="background: var(--success);">✔ Approve</button>
+                            <button type="submit" name="action" value="reject" style="background: var(--danger);">✖ Reject</button>
+                            <button type="submit" name="action" value="escalate" style="background: var(--warning);">⚠ Escalate</button>
+                        </div>
+                    </form>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Right Column: SLA & Audit -->
+            <div>
+                <div class="card">
+                    <h3>SLA Governance</h3>
+                    {% if sla and sla.status != 'not_started' %}
+                    <div class="sla-container">
+                        <div style="display: flex; justify-content: space-between; font-size: 0.85rem;">
+                            <span>Current Step: <strong>Officer Review</strong></span>
+                            <span style="color: {% if sla.breached %}var(--danger){% else %}var(--success){% endif %}; font-weight: 700;">
+                                {{ 'BREACHED' if sla.breached else 'ON TRACK' }}
+                            </span>
+                        </div>
+                        <div class="sla-bar-bg">
+                            {% set pct = (sla.elapsed_seconds / sla.limit_seconds * 100)|round|int %}
+                            {% if pct > 100 %}{% set pct = 100 %}{% endif %}
+                            <div class="sla-progress" style="width: {{ pct }}%; background: {% if pct > 90 %}var(--danger){% elif pct > 60 %}var(--warning){% else %}var(--success){% endif %};"></div>
+                        </div>
+                        <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.5rem; text-align: center;">
+                            {{ sla.elapsed_seconds }}s elapsed of {{ sla.limit_seconds }}s limit
+                        </p>
+                    </div>
+                    {% else %}
+                    <div class="alert alert-info">SLA tracking completed for this application.</div>
+                    {% endif %}
+                </div>
+
+                <div class="card">
+                    <h3>Supporting Documents ({{ app.documents|length }})</h3>
+                    <ul style="list-style: none; padding: 0;">
+                        {% for doc in app.documents %}
+                        <li style="padding: 0.75rem; border: 1px solid var(--border); border-radius: 4px; margin-bottom: 0.5rem; display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <span style="display: block; font-weight: 600; font-size: 0.9rem;">{{ doc.original_name }}</span>
+                                <span style="font-size: 0.7rem; color: var(--text-muted);">Extracted: {{ doc.fields_found|join(', ') or 'None' }}</span>
+                            </div>
+                            <a href="{{ url_for('serve_upload', filename=doc.filename) }}" target="_blank" class="badge badge-info" style="text-decoration: none;">View</a>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+
+                <div class="card">
+                    <h3>Blockchain Audit Trail</h3>
+                    <div class="timeline">
+                        {% for entry in audit|reverse %}
+                        <div class="timeline-item">
+                            <div class="timeline-content">
+                                <span class="timeline-time">{{ entry.timestamp[11:19] }} on {{ entry.timestamp[:10] }}</span>
+                                <div class="timeline-actor">System: {{ entry.actor }}</div>
+                                <div style="font-size: 0.85rem; color: var(--primary-light); font-weight: 600; margin: 0.25rem 0;">
+                                    {{ entry.action|upper }}
+                                </div>
+                                <div style="font-family: monospace; font-size: 0.7rem; color: var(--text-muted); word-break: break-all;">
+                                    Hash: {{ entry.hash[:20] }}...
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+</body>
+</html>
