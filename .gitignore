@@ -1,0 +1,25 @@
+# Environment & Virtual Env
+env/
+.venv/
+.env
+
+# Application Data (Ignore actual data files)
+database/
+uploads/
+extracted_data/
+sample
+
+# Python Artifacts
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# IDE Settings
+.vscode/
+.idea/
+
+# Debug/Temp files
+*.log
+diff.pdf
+prompt.md

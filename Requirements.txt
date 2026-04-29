@@ -1,0 +1,9 @@
+flask
+flask-cors
+pytesseract
+Pillow>=10.3.0
+pdf2image
+python-dateutil
+werkzeug
+thefuzz
+python-Levenshtein
