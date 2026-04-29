@@ -23,3 +23,6 @@ __pycache__/
 *.log
 diff.pdf
 prompt.md
+
+extracted_data/*
+!extracted_data/sample.json
